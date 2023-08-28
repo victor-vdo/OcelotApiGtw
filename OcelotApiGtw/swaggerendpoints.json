@@ -1,0 +1,26 @@
+{
+  "SwaggerEndPoints": [
+    {
+      "Key": "ordering",
+      "TransformByOcelotConfig": true,
+      "Config": [
+        {
+          "Name": "Ordering.API",
+          "Version": "1.0",
+          "Url": "https://localhost:7146/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "payment",
+      "TransformByOcelotConfig": true,
+      "Config": [
+        {
+          "Name": "Payment.API",
+          "Version": "1.0",
+          "Url": "https://localhost:7034/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ]
+}
