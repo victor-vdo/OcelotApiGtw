@@ -13,7 +13,7 @@
       "UpstreamPathTemplate": "/order/{everything}",
       "UpstreamHttpMethod": [ "Post", "Get" ],
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "order_auth_scheme",
+        "AuthenticationProviderKey": "api_auth_scheme",
         "AllowedScopes": []
       }
     },
@@ -30,7 +30,7 @@
       "UpstreamPathTemplate": "/payment/{everything}",
       "UpstreamHttpMethod": [ "Post", "Get" ],
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "payment_auth_scheme",
+        "AuthenticationProviderKey": "api_auth_scheme",
         "AllowedScopes": []
       }
     }

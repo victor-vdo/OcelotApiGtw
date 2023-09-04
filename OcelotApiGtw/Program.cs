@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MMLib.SwaggerForOcelot.DependencyInjection;
@@ -27,23 +26,12 @@ var user = new AuthUser()
 
 builder.Services
     .AddAuthentication()
-    .AddJwtBearer("order_auth_scheme", options =>
+    .AddJwtBearer("api_auth_scheme", options =>
     {
         options.TokenValidationParameters = new
-                                TokenValidationParameters()
+            TokenValidationParameters()
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("order_api_secret")),
-            ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
-    })
-    .AddJwtBearer("payment_auth_scheme", options =>
-    {
-        options.TokenValidationParameters = new
-                                TokenValidationParameters()
-        {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("payment_secret")),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationProviderKey)),
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
@@ -57,7 +45,6 @@ builder.Configuration.AddOcelotWithSwaggerSupport(options =>
 {
     options.Folder = routes;
 });
-
 
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
