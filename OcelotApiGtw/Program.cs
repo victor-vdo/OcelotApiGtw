@@ -1,8 +1,12 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MMLib.SwaggerForOcelot.DependencyInjection;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using OcelotApiGtw;
+using OcelotApiGtw.Domain.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,16 +16,48 @@ builder.Configuration.AddJsonFile("swaggerendpoints.json").AddEnvironmentVariabl
 // Add services to the container.
 var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
 var authenticationProviderKey = builder.Configuration.GetSection("APISettings:APIKey").Value ?? String.Empty;
+var key = Encoding.ASCII.GetBytes(authenticationProviderKey);
 
+var jwtSecret = builder.Configuration.GetSection("APISettings:JWTSecret").Value ?? String.Empty;
+var user = new AuthUser()
+{ 
+    Username = jwtSecret.Split("|")[0],
+    Password = jwtSecret.Split("|")[1]
+};
+
+builder.Services
+    .AddAuthentication()
+    .AddJwtBearer("order_auth_scheme", options =>
+    {
+        options.TokenValidationParameters = new
+                                TokenValidationParameters()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("order_api_secret")),
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    })
+    .AddJwtBearer("payment_auth_scheme", options =>
+    {
+        options.TokenValidationParameters = new
+                                TokenValidationParameters()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("payment_secret")),
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddOcelot(builder.Configuration);
+builder.Services.AddSwaggerForOcelot(builder.Configuration);
 var routes = "/";
-
 builder.Configuration.AddOcelotWithSwaggerSupport(options =>
 {
     options.Folder = routes;
 });
 
-builder.Services.AddOcelot(builder.Configuration);
-builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
@@ -54,29 +90,6 @@ builder.Services.AddSwaggerGen(c =>
             Url = new Uri("https://example.com/license"),
         }
     });
-
-    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
-    {
-        Description = "ApiKey must appear in header",
-        Type = SecuritySchemeType.ApiKey,
-        Name = "XApiKey",
-        In = ParameterLocation.Header,
-        Scheme = "ApiKeyScheme"
-    });
-    var key = new OpenApiSecurityScheme()
-    {
-        Reference = new OpenApiReference
-        {
-            Type = ReferenceType.SecurityScheme,
-            Id = "ApiKey"
-        },
-        In = ParameterLocation.Header
-    };
-    var requirement = new OpenApiSecurityRequirement
-                    {
-                             { key, new List<string>() }
-                    };
-    c.AddSecurityRequirement(requirement);
 });
 
 var app = builder.Build();
@@ -89,6 +102,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseSwaggerForOcelotUI(options =>
