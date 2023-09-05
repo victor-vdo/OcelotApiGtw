@@ -20,14 +20,7 @@ namespace OcelotApiGtw.Auth.Controllers
             _paymentService = paymentService;
         }
 
-        [HttpPost("payments")]
-        public async Task<IActionResult> Payments([FromBody] AuthUser authUser)
-        {
-            var payment = _paymentService.GenerateToken(authUser);
-            return Ok(payment);
-        }
-
-        [HttpPost("order")]
+        [HttpPost("login")]
         public async Task<IActionResult> Order([FromBody] AuthUser authUser)
         {
             var order = _orderService.GenerateToken(authUser);
@@ -50,24 +43,29 @@ namespace OcelotApiGtw.Auth.Controllers
     {
         public AuthToken GenerateToken(AuthUser user)
         {
-            var auth = "H98HF9QD8HF928H9F8H293H89qh9hf9ahf98hH89=";
-            var enc = Encoding.ASCII.GetBytes(auth);
-            var key = new SymmetricSecurityKey(enc);
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+            var key = new SymmetricSecurityKey
+ (Encoding.UTF8.GetBytes("H98HF9QD8HF928H9F8H293H89qh9hf9ahf98hH89="));
+            var credentials = new SigningCredentials
+                    (key, SecurityAlgorithms.HmacSha256);
             var expirationDate = DateTime.UtcNow.AddHours(2);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+            var claims = new[]
             {
-                Expires = expirationDate,
-                SigningCredentials = credentials
+                new Claim(ClaimTypes.Name, user.Username.
+                                                    ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.
+                                            NewGuid().ToString())
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var jwtToken = tokenHandler.WriteToken(token);
-
+            var token = new JwtSecurityToken(
+                    audience: "paymentAudience",
+                    issuer: "paymentIssuer",
+                    claims: claims,
+                    expires: expirationDate,
+                    signingCredentials: credentials);
             var authToken = new AuthToken();
-            authToken.Token = new JwtSecurityTokenHandler().WriteToken(token);
+            authToken.Token = new JwtSecurityTokenHandler().
+                                            WriteToken(token);
             authToken.ExpirationDate = expirationDate;
 
             return authToken;
@@ -78,24 +76,47 @@ namespace OcelotApiGtw.Auth.Controllers
     {
         public AuthToken GenerateToken(AuthUser user)
         {
-            var auth = "H98HF9QD8HF928H9F8H293H89qh9hf9ahf98hH89=";
-            var enc = Encoding.ASCII.GetBytes(auth);
-            var key = new SymmetricSecurityKey(enc);
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey
+ (Encoding.UTF8.GetBytes("H98HF9QD8HF928H9F8H293H89qh9hf9ahf98hH89="));
+            var credentials = new SigningCredentials
+                    (key, SecurityAlgorithms.HmacSha256);
             var expirationDate = DateTime.UtcNow.AddHours(2);
-            var tokenTest = new JwtSecurityToken(
-                null,
-                null,
-                null,
-                expires: expirationDate,
-                signingCredentials: credentials);
 
-            var token = new JwtSecurityTokenHandler().WriteToken(tokenTest);
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, user.Username.
+                                                    ToString()),
+                new Claim("scheme","order_auth_scheme"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.
+                                            NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                    audience: "orderAudience",
+                    issuer: "orderIssuer",
+                    claims: claims,
+                    expires: expirationDate,
+                    signingCredentials: credentials);
             var authToken = new AuthToken();
-            authToken.Token = token;
+            authToken.Token = new JwtSecurityTokenHandler().
+                                            WriteToken(token);
             authToken.ExpirationDate = expirationDate;
 
             return authToken;
+        }
+
+        private string GerarTokenJWT(string key)
+        {
+            var issuer = "Jwt:Issuer";
+            var audience = "Jwt:Audience";
+            var expiry = DateTime.Now.AddMinutes(120);
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(issuer: issuer, audience: audience,
+                    expires: DateTime.Now.AddMinutes(120), signingCredentials: credentials);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var stringToken = tokenHandler.WriteToken(token);
+            return stringToken;
         }
     }
 

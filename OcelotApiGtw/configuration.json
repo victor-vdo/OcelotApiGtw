@@ -13,7 +13,7 @@
       "UpstreamPathTemplate": "/order/{everything}",
       "UpstreamHttpMethod": [ "Post", "Get" ],
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "api_auth_scheme",
+        "AuthenticationProviderKey": "order_auth_scheme",
         "AllowedScopes": []
       }
     },
@@ -30,12 +30,13 @@
       "UpstreamPathTemplate": "/payment/{everything}",
       "UpstreamHttpMethod": [ "Post", "Get" ],
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "api_auth_scheme",
+        "AuthenticationProviderKey": "payment_auth_scheme",
         "AllowedScopes": []
       }
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7127"
+    "BaseUrl": "https://localhost:7127",
+    "RequestIdKey": "X-Correlation-Id"
   }
 }

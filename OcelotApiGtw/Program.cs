@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MMLib.SwaggerForOcelot.DependencyInjection;
@@ -7,7 +5,6 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using OcelotApiGtw;
 using OcelotApiGtw.Domain.Interfaces;
-using OcelotApiGtw.Domain.Models;
 using OcelotApiGtw.Domain.Services;
 using System.Text;
 
@@ -15,33 +12,44 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("configuration.json").AddEnvironmentVariables();
 builder.Configuration.AddJsonFile("swaggerendpoints.json").AddEnvironmentVariables();
+var authenticationProviderKey = builder.Configuration.GetSection("APISettings:APIKey").Value ?? String.Empty;
 
 // Add services to the container.
 builder.Services.AddTransient<IPaymentService, PaymentService>();
 builder.Services.AddTransient<IOrderService, OrderService>();
 
-var authenticationProviderKey = builder.Configuration.GetSection("APISettings:APIKey").Value ?? String.Empty;
-var key = Encoding.ASCII.GetBytes(authenticationProviderKey);
-
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer("api_auth_scheme", options =>
+    .AddAuthentication()
+    .AddJwtBearer("order_auth_scheme", options =>
     {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
         options.TokenValidationParameters = new
-            TokenValidationParameters()
+                                         TokenValidationParameters()
         {
+            IssuerSigningKey = new SymmetricSecurityKey
+                  (Encoding.UTF8.GetBytes(authenticationProviderKey)),
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
             ValidateIssuer = false,
-            ValidateAudience = false
+            ValidateAudience = false,
+        };
+    })
+    .AddJwtBearer("payment_auth_scheme", options =>
+    {
+        options.TokenValidationParameters = new
+                                         TokenValidationParameters()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey
+                  (Encoding.UTF8.GetBytes(authenticationProviderKey)),
+            ValidAudience = "paymentAudience",
+            ValidIssuer = "paymentIssuer",
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
     });
 
+var routes = "/";
 builder.Services.AddOcelot(builder.Configuration);
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
-var routes = "/";
 builder.Configuration.AddOcelotWithSwaggerSupport(options =>
 {
     options.Folder = routes;
