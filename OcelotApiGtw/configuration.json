@@ -15,6 +15,15 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "order_auth_scheme",
         "AllowedScopes": []
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [
+        ],
+        "EnableRateLimiting": true,
+        "Period": "5s",
+        "PeriodTimespan": 1,
+        "Limit": 1,
+        "HttpStatusCode": 429
       }
     },
     {
@@ -32,6 +41,19 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "payment_auth_scheme",
         "AllowedScopes": []
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [
+        ],
+        "EnableRateLimiting": true,
+        "Period": "5s",
+        "PeriodTimespan": 1,
+        "Limit": 1,
+        "HttpStatusCode": 429
+      },
+      "FileCacheOptions": {
+        "TtlSeconds": 30,
+        "Region": "paymentcaching"
       }
     }
   ],

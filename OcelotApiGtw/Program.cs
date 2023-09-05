@@ -7,6 +7,7 @@ using OcelotApiGtw;
 using OcelotApiGtw.Domain.Interfaces;
 using OcelotApiGtw.Domain.Services;
 using System.Text;
+using Ocelot.Cache.CacheManager;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,7 +49,12 @@ builder.Services
     });
 
 var routes = "/";
-builder.Services.AddOcelot(builder.Configuration);
+builder.Services.AddOcelot(builder.Configuration)
+    .AddCacheManager(x =>
+        {
+            x.WithDictionaryHandle();
+        });
+
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
 builder.Configuration.AddOcelotWithSwaggerSupport(options =>
 {
