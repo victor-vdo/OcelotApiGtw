@@ -1,16 +1,13 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using OcelotApiGtw.Domain.Interfaces;
 using OcelotApiGtw.Domain.Models;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace OcelotApiGtw.Domain.Services
 {
-    public class OrderService
+    public class OrderService : IOrderService
     {
         public AuthToken GenerateToken(AuthUser user)
         {

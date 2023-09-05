@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using OcelotApiGtw.Domain.Interfaces;
 using OcelotApiGtw.Domain.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace OcelotApiGtw.Domain.Services
 {
-    public class PaymentService
+    public class PaymentService : IPaymentService
     {
         public AuthToken GenerateToken(AuthUser user)
         {

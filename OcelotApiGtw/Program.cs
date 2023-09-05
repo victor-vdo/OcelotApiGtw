@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MMLib.SwaggerForOcelot.DependencyInjection;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using OcelotApiGtw;
+using OcelotApiGtw.Domain.Interfaces;
 using OcelotApiGtw.Domain.Models;
+using OcelotApiGtw.Domain.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,28 +17,25 @@ builder.Configuration.AddJsonFile("configuration.json").AddEnvironmentVariables(
 builder.Configuration.AddJsonFile("swaggerendpoints.json").AddEnvironmentVariables();
 
 // Add services to the container.
-var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
+builder.Services.AddTransient<IPaymentService, PaymentService>();
+builder.Services.AddTransient<IOrderService, OrderService>();
+
 var authenticationProviderKey = builder.Configuration.GetSection("APISettings:APIKey").Value ?? String.Empty;
 var key = Encoding.ASCII.GetBytes(authenticationProviderKey);
 
-var jwtSecret = builder.Configuration.GetSection("APISettings:JWTSecret").Value ?? String.Empty;
-var user = new AuthUser()
-{ 
-    Username = jwtSecret.Split("|")[0],
-    Password = jwtSecret.Split("|")[1]
-};
-
 builder.Services
-    .AddAuthentication()
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer("api_auth_scheme", options =>
     {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
         options.TokenValidationParameters = new
             TokenValidationParameters()
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationProviderKey)),
             ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false
         };
     });
 
@@ -99,6 +100,7 @@ app.UseSwaggerForOcelotUI(options =>
 
 }).UseOcelot().Wait();
 
+app.UseRouting();
 app.MapControllers();
 
 app.Run();
